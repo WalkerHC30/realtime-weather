@@ -9,8 +9,19 @@ import { ReactComponent as RainIcon } from './images/rain.svg';
 import { ReactComponent as AirFlowIcon } from './images/airFlow.svg'
 import { ReactComponent as RefreshIcon } from './images/refresh.svg'
 
+const AUTHORIZATION_KEY = 'CWB-7C930803-B46B-44AF-9B38-E15F3AE0F7EF';
+const LOCATION_NAME = '臺北';
 
 const App = () => {
+
+  const handleClick = () => {
+    fetch(
+      `https://opendata.cwb.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${AUTHORIZATION_KEY}&locationName=${LOCATION_NAME}`
+    ).then((response) => response.json())
+    .then((data) => {console.log('data', data);
+  });
+}
+  
 
   const [currentTheme, setCurrentTheme] = useState('light');
 
@@ -22,6 +33,9 @@ const App = () => {
     rainPossibility: 48.3,
     observationTime: '2021-05-31 22:10:00',
   });
+
+  
+
   //用來傳入到下面ThemeProvider的元件（標籤）以此所有包含在內的元件都會套用樣式
   const theme = {
     light: {
@@ -165,7 +179,7 @@ const Refresh = styled.div`
             minute: 'numeric',
           }).format(dayjs(currentWeather.observationTime))}
             {''}
-           <RefreshIcon/>
+           <RefreshIcon onClick={handleClick}/>
         </Refresh>
       </WeatherCard>
     </Container>
