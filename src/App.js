@@ -3,6 +3,7 @@ import styled from '@emotion/styled';
 //import {ThemeProvider} from 'emotion-theming'; //此方法已經不管用 要用下面這個方式
 import { useTheme, ThemeProvider, withTheme } from '@emotion/react'
 import React,  { useState } from 'react';
+import dayjs from 'dayjs';
 import { ReactComponent as DayCloudyIcon } from './images/day-cloudy.svg';
 import { ReactComponent as RainIcon } from './images/rain.svg';
 import { ReactComponent as AirFlowIcon } from './images/airFlow.svg'
@@ -13,6 +14,14 @@ const App = () => {
 
   const [currentTheme, setCurrentTheme] = useState('light');
 
+  const [currentWeather, setCurrentWeather] = useState({
+    locationName: '臺北市', 
+    description: '多雲時晴', 
+    windSpeed: 1.1, 
+    temperature: 22.9, 
+    rainPossibility: 48.3,
+    observationTime: '2021-05-31 22:10:00',
+  });
   //用來傳入到下面ThemeProvider的元件（標籤）以此所有包含在內的元件都會套用樣式
   const theme = {
     light: {
@@ -137,21 +146,26 @@ const Refresh = styled.div`
     <ThemeProvider theme={theme[currentTheme]}>
     <Container>
       <WeatherCard>
-        <Location>台北市</Location>
-        <Description>多雨時晴</Description>
+        <Location>{currentWeather.locationName}</Location>
+        <Description>{currentWeather.description}</Description>
         <CurrentWeather>
           <Temperature>
-            23<Celsius>ºC</Celsius>
+          {Math.round(currentWeather.temperature)}<Celsius>ºC</Celsius>
           </Temperature>
           <DayCloudy />
         </CurrentWeather>
         <AirFlow>
-          <AirFlowIcon/>23 m/h
+          <AirFlowIcon/>{currentWeather.windSpeed} m/h
         </AirFlow>
         <Rain>
-        <RainIcon /> 48% </Rain>
+        <RainIcon /> {currentWeather.rainPossibility} </Rain>
         <Refresh> 
-          最後觀測時間：上午 12:03 <RefreshIcon/>
+          最後觀測時間：{new Intl.DateTimeFormat('zh-TW', {
+            hour: 'numeric',
+            minute: 'numeric',
+          }).format(dayjs(currentWeather.observationTime))}
+            {''}
+           <RefreshIcon/>
         </Refresh>
       </WeatherCard>
     </Container>
