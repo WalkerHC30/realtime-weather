@@ -2,7 +2,7 @@
 import styled from '@emotion/styled';
 //import {ThemeProvider} from 'emotion-theming'; //此方法已經不管用 要用下面這個方式
 import { useTheme, ThemeProvider, withTheme } from '@emotion/react'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import dayjs from 'dayjs';
 import { ReactComponent as DayCloudyIcon } from './images/day-cloudy.svg';
 import { ReactComponent as RainIcon } from './images/rain.svg';
@@ -93,7 +93,7 @@ const App = () => {
   } = weatherElement;
 
   //抓取資料
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
       
     //拉取資料前先將isLoading變成true  
     setWeatherElement((prevState) => ({
@@ -111,16 +111,14 @@ const App = () => {
         ...weatherForecast,
         isLoading: false,
       })
-  };
+  }, []) 
   
   //畫面render完就執行
   useEffect(() => {
     console.log('execute function in useEffect');
     fetchData();
-  }, []) //空陣列是觀察的變數，沒變動就不會重新執行，防止無限迴圈
+  }, [fetchData]) //空陣列是觀察的變數，沒變動就不會重新執行，防止無限迴圈
 
-  
-  
   //用來傳入到下面ThemeProvider的元件（標籤）以此所有包含在內的元件都會套用樣式
   const theme = {
     light: {
