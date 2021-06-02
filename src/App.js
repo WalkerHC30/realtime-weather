@@ -12,18 +12,21 @@ import {ReactComponent as LoadingIcon} from './images/loading.svg';
 
 const AUTHORIZATION_KEY = 'CWB-7C930803-B46B-44AF-9B38-E15F3AE0F7EF';
 const LOCATION_NAME = '臺北';
+const LOCATION_NAME_FORECAST = '臺北市';
 
 const App = () => {
 
   const [currentTheme, setCurrentTheme] = useState('light');
 
-  const [currentWeather, setCurrentWeather] = useState({
-    locationName: '臺北市', 
-    description: '多雲時晴', 
-    windSpeed: 1.1, 
-    temperature: 22.9, 
-    rainPossibility: 48.3,
-    observationTime: '2021-05-31 22:10:00',
+  const [weatherElement, setWeatherElement] = useState({
+    locationName: '', 
+    description: '', 
+    windSpeed: 0, 
+    temperature: 0, 
+    rainPossibility: 0,
+    observationTime: new Date(),
+    comfortability: '',
+    weatherCode: 0,
     isLoading: true,
   });
 
@@ -35,17 +38,19 @@ const App = () => {
     windSpeed,
     temperature,
     rainPossibility,
-    isLoading
-  } = currentWeather;
+    isLoading,
+    comfortability,
+  } = weatherElement;
   //畫面render完就執行
   useEffect(() => {
     fetchCurrentWeather();
+    fetchWeatherForecast();
   }, []) //空陣列是觀察的變數，沒變動就不會重新執行，防止無限迴圈
 
   const fetchCurrentWeather = () => {
     
     //取得變更前的資料狀態，每次點擊執行，就要顯示拉取中
-    setCurrentWeather((prevState) => (
+    setWeatherElement((prevState) => (
        {...prevState, isLoading: true
       }));
 
@@ -62,17 +67,42 @@ const App = () => {
           return neededElements;
         },{}
       );
-      setCurrentWeather({
+      setWeatherElement((prevState) => ({
+        ...prevState,
         observationTime: locationData.time.obsTime,
         locationName: locationData.locationName,
         temperature: weatherElements.TEMP,
         windSpeed: weatherElements.WDSD,
-        description: '多雲時晴',
-        rainPossibility: 60,
         isLoading: false,
-      });
+      }));
   });
-}
+} //fetchCurrentWeather
+
+const fetchWeatherForecast = () => {
+  fetch(
+    `https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=${AUTHORIZATION_KEY}&locationName=${LOCATION_NAME_FORECAST}`
+  ).then((response) => response.json())
+  .then((data) => {
+    const locationData = data.records.location[0];
+
+    const weatherElements = locationData.weatherElement.reduce(
+      (neededElements, item) => {
+        if (['Wx', 'PoP', 'CI'].includes(item.elementName)){
+          neededElements[item.elementName] = item.time[0].parameter;
+        }
+        return neededElements;
+      },
+      {}
+    )
+    setWeatherElement((prevState) => ({
+      ...prevState, 
+      description: weatherElements.Wx.parameterName,
+      weatherCode: weatherElements.Wx.parameterValue,
+      rainPossibility: weatherElements.PoP.parameterName,
+      comfortability: weatherElements.CI.parameterName,
+    }))
+  }); //fetch.then
+};//fetchWeatherForecast
   
   //用來傳入到下面ThemeProvider的元件（標籤）以此所有包含在內的元件都會套用樣式
   const theme = {
@@ -207,10 +237,10 @@ const Refresh = styled.div`
   return (
     <ThemeProvider theme={theme[currentTheme]}>
     <Container>
-      {console.log('render, isLoading:', currentWeather.isLoading)}
+      {console.log('render, isLoading:', isLoading)}
       <WeatherCard>
         <Location>{locationName}</Location>
-        <Description>{description}</Description>
+        <Description>{description}{' '}{comfortability}</Description>
         <CurrentWeather>
           <Temperature>
           {Math.round(temperature)}<Celsius>ºC</Celsius>
@@ -223,7 +253,10 @@ const Refresh = styled.div`
         <Rain>
         <RainIcon /> {rainPossibility} </Rain>
         <Refresh 
-        onClick={fetchCurrentWeather}
+        onClick={() => {
+          fetchCurrentWeather();
+          fetchWeatherForecast();
+        }}
         isLoading={isLoading}
         > 
           最後觀測時間：{new Intl.DateTimeFormat('zh-TW', {
