@@ -2,7 +2,7 @@
 import styled from '@emotion/styled';
 //import {ThemeProvider} from 'emotion-theming'; //此方法已經不管用 要用下面這個方式
 import { useTheme, ThemeProvider, withTheme } from '@emotion/react'
-import React,  { useState } from 'react';
+import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { ReactComponent as DayCloudyIcon } from './images/day-cloudy.svg';
 import { ReactComponent as RainIcon } from './images/rain.svg';
@@ -14,11 +14,34 @@ const LOCATION_NAME = '臺北';
 
 const App = () => {
 
-  const handleClick = () => {
+  //畫面render完就執行
+  useEffect(() => {
+    fetchCurrentWeather();
+  }, []) //空陣列是觀察的變數，沒變動就不會重新執行，防止無限迴圈
+
+  const fetchCurrentWeather = () => {
     fetch(
       `https://opendata.cwb.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${AUTHORIZATION_KEY}&locationName=${LOCATION_NAME}`
     ).then((response) => response.json())
-    .then((data) => {console.log('data', data);
+    .then((data) => {
+      const locationData = data.records.location[0];
+      const weatherElements = locationData.weatherElement.reduce(
+        (neededElements, item) => {
+          if (['WDSD', 'TEMP'].includes(item.elementName)){
+            neededElements[item.elementName] = item.elementValue;
+          }
+          return neededElements;
+        },{}
+      );
+      setCurrentWeather({
+        observationTime: locationData.time.obsTime,
+        locationName: locationData.locationName,
+        temperature: weatherElements.TEMP,
+        windSpeed: weatherElements.WDSD,
+        description: '多雲時晴',
+        rainPossibility: 60,
+        isLoading: false,
+      });
   });
 }
   
@@ -32,6 +55,7 @@ const App = () => {
     temperature: 22.9, 
     rainPossibility: 48.3,
     observationTime: '2021-05-31 22:10:00',
+    isLoading: true,
   });
 
   
@@ -179,7 +203,7 @@ const Refresh = styled.div`
             minute: 'numeric',
           }).format(dayjs(currentWeather.observationTime))}
             {''}
-           <RefreshIcon onClick={handleClick}/>
+           <RefreshIcon onClick={fetchCurrentWeather}/>
         </Refresh>
       </WeatherCard>
     </Container>
