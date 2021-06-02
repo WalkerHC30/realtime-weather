@@ -27,6 +27,16 @@ const App = () => {
     isLoading: true,
   });
 
+  //解構賦值 要使用的資料就不用寫currentWeather.xxx
+  const {
+    observationTime,
+    locationName,
+    description,
+    windSpeed,
+    temperature,
+    rainPossibility,
+    isLoading
+  } = currentWeather;
   //畫面render完就執行
   useEffect(() => {
     fetchCurrentWeather();
@@ -199,29 +209,29 @@ const Refresh = styled.div`
     <Container>
       {console.log('render, isLoading:', currentWeather.isLoading)}
       <WeatherCard>
-        <Location>{currentWeather.locationName}</Location>
-        <Description>{currentWeather.description}</Description>
+        <Location>{locationName}</Location>
+        <Description>{description}</Description>
         <CurrentWeather>
           <Temperature>
-          {Math.round(currentWeather.temperature)}<Celsius>ºC</Celsius>
+          {Math.round(temperature)}<Celsius>ºC</Celsius>
           </Temperature>
           <DayCloudy />
         </CurrentWeather>
         <AirFlow>
-          <AirFlowIcon/>{currentWeather.windSpeed} m/h
+          <AirFlowIcon/>{windSpeed} m/h
         </AirFlow>
         <Rain>
-        <RainIcon /> {currentWeather.rainPossibility} </Rain>
+        <RainIcon /> {rainPossibility} </Rain>
         <Refresh 
         onClick={fetchCurrentWeather}
-        isLoading={currentWeather.isLoading}
+        isLoading={isLoading}
         > 
           最後觀測時間：{new Intl.DateTimeFormat('zh-TW', {
             hour: 'numeric',
             minute: 'numeric',
-          }).format(dayjs(currentWeather.observationTime))}
+          }).format(dayjs(observationTime))}
             {''}
-           {currentWeather.isLoading ? <LoadingIcon/> : <RefreshIcon />}
+           {isLoading ? <LoadingIcon/> : <RefreshIcon />}
         </Refresh>
       </WeatherCard>
     </Container>
