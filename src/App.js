@@ -91,28 +91,31 @@ const App = () => {
     isLoading,
     comfortability,
   } = weatherElement;
+
+  //抓取資料
+  const fetchData = async () => {
+      
+    //拉取資料前先將isLoading變成true  
+    setWeatherElement((prevState) => ({
+        ...prevState,
+        isLoading: true,
+      }));
+
+      // 拉取資料的awai function
+      const [currentWeather, weatherForecast] = await Promise.all([fetchCurrentWeather(), fetchWeatherForecast()
+      ]);
+
+      //把取得的物件用解構賦值放入
+      setWeatherElement({
+        ...currentWeather,
+        ...weatherForecast,
+        isLoading: false,
+      })
+  };
   
   //畫面render完就執行
   useEffect(() => {
-    const fetchData = async () => {
-      
-      //拉取資料前先將isLoading變成true  
-      setWeatherElement((prevState) => ({
-          ...prevState,
-          isLoading: true,
-        }));
-
-        // 拉取資料的awai function
-        const [currentWeather, weatherForecast] = await Promise.all([fetchCurrentWeather(), fetchWeatherForecast()
-        ]);
-
-        //把取得的物件用解構賦值放入
-        setWeatherElement({
-          ...currentWeather,
-          ...weatherForecast,
-          isLoading: false,
-        })
-    };
+    console.log('execute function in useEffect');
     fetchData();
   }, []) //空陣列是觀察的變數，沒變動就不會重新執行，防止無限迴圈
 
@@ -267,11 +270,7 @@ const Refresh = styled.div`
         <Rain>
         <RainIcon /> {rainPossibility} </Rain>
         <Refresh 
-        onClick={() => {
-          fetchCurrentWeather();
-          fetchWeatherForecast();
-          console.log('123');
-        }}
+        onClick={fetchData}
         isLoading={isLoading}
         > 
           最後觀測時間：{new Intl.DateTimeFormat('zh-TW', {
